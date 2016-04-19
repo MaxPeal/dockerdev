@@ -1,6 +1,6 @@
 dev:
-  # image: quay.io/goodguide/dev:v3
-  build: .
+  image: namick/dockerdev
+  #build: .
 
   container_name: dev
 
