@@ -33,7 +33,20 @@ RUN apt-get update \
       ssh-client \
       subversion \
       rsync \
-      wget
+      wget \
+
+      # Ruby dependencies
+      zlib1g-dev \
+      libssl-dev \
+      libreadline-dev \
+      libyaml-dev \
+      libsqlite3-dev \
+      sqlite3 \
+      libxml2-dev \
+      libxslt1-dev \
+      libcurl4-openssl-dev \
+      python-software-properties \
+      libffi-dev
 
 # Set up ssh server
 EXPOSE 22
