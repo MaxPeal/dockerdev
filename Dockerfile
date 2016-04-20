@@ -1,18 +1,67 @@
 # vim: set expandtab tabstop=2 shiftwidth=2 softtabstop=2:
 FROM ubuntu:xenial
 
+# Tell Apt never to prompt
+ENV DEBIAN_FRONTEND noninteractive
+
 ENV PREFIX /usr/local
+
+RUN set -x \
+ # Set up UTF support
+ && locale-gen en_US en_US.UTF-8 \
+ && dpkg-reconfigure locales \
+ && update-locale LANG=en_US.UTF-8 \
+
+ # Set apt mirror
+ && sed 's:archive.ubuntu.com/ubuntu/:mirrors.rit.edu/ubuntu-archive/:' -i /etc/apt/sources.list \
+
+ # never install recommends automatically
+ && echo 'Apt::Install-Recommends "false";' > /etc/apt/apt.conf.d/docker-no-recommends \
+ && echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/docker-assume-yes \
+ && echo 'APT::Get::AutomaticRemove "true";' > /etc/apt/apt.conf.d/docker-auto-remove \
+
+ # enable backports and others off by default
+ && sed 's/^#\s*deb/deb/' -i /etc/apt/sources.list \
+
+ # Enable automatic preference to use backport
+ && echo 'Package: *'                        >> /etc/apt/preferences \
+ && echo 'Pin: release a=xenial-backports'   >> /etc/apt/preferences \
+ && echo 'Pin-Priority: 500'                 >> /etc/apt/preferences \
+
+# Prepare for docker-engine
+ && apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
+			--recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
+ # This should be changed to ubuntu-xenial when it works
+ # && echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list \
+ && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
+ && apt-cache policy docker-engine
+
+# Install docker-compose
+RUN set -x \
+ && version='1.7.0' \
+ && curl -L -o /tmp/docker-compose "https://github.com/docker/compose/releases/download/${version}/docker-compose-$(uname -s)-$(uname -m)" \
+ && install -v /tmp/docker-compose "$PREFIX/bin/docker-compose-${version}" \
+ && rm -vrf /tmp/* \
+ && ln -s "$PREFIX/bin/docker-compose-${version}" "$PREFIX/bin/docker-compose"
+
 
 # Set up PPAs
 RUN apt-get update \
- && apt-get install -y python-software-properties \
-                    software-properties-common \
- && add-apt-repository ppa:git-core/ppa -y
+ && apt-get upgrade \
+ && apt-get install \
+			python-software-properties \
+      software-properties-common \
+ && add-apt-repository ppa:git-core/ppa \
 
- # Install base packages
-RUN apt-get update \
- # && apt-get upgrade \
- && apt-get install -y \
+ && apt-get update \
+ && apt-get install \
+      aptitude \
+      bash \
+      coreutils \
+      git \
+      gnupg \
+      gzip \
+      iputils-ping \
       ack-grep \
       apt-transport-https \
       ca-certificates \
@@ -35,6 +84,10 @@ RUN apt-get update \
       rsync \
       wget \
 
+			# Docker
+      linux-image-extra-virtual-lts-xenial \
+      docker-engine
+
       # Ruby dependencies
       zlib1g-dev \
       libssl-dev \
@@ -45,12 +98,27 @@ RUN apt-get update \
       libxml2-dev \
       libxslt1-dev \
       libcurl4-openssl-dev \
-      python-software-properties \
-      libffi-dev
+      libffi-dev \
+
+			# Vim dependencies
+      libacl1 \
+      libc6 \
+      libgpm2 \
+      libncurses5-dev \
+      libselinux1 \
+      libssl-dev \
+      libtcl8.6 \
+      libtinfo5 \
+      python-dev \
+
+			# Tmux depndencies
+      automake \
+      libevent-dev \
+      pkg-config
 
 # Set up ssh server
 EXPOSE 22
-RUN apt-get install -y \
+RUN apt-get install \
             openssh-server \
 
  # Delete the host keys it just generated. At runtime, we'll regenerate those
@@ -70,25 +138,14 @@ RUN set -x \
  && tar -xz -C "$GOROOT" --strip-components=1 -f go.tgz \
  && rm /tmp/go.tgz
 
-RUN echo "export GOROOT=$GOROOT" >> /root/.profile \
- && echo "export GOPATH=$GOPATH" >> /root/.profile \
- && echo "export PATH=$GOPATH/bin:$GOROOT/bin:\$PATH" >> /root/.profile \
+RUN echo "export GOROOT=$GOROOT" >> /root/.bashrc \
+ && echo "export GOPATH=$GOPATH" >> /root/.bashrc \
+ && echo "export PATH=$GOPATH/bin:$GOROOT/bin:\$PATH" >> /root/.bashrc \
  && mkdir -p $GOPATH
 
 # Install VIM
 RUN set -x \
  && version='7.4.1752' \
- && apt-get install -y \
-      libacl1 \
-      libc6 \
-      libgpm2 \
-      libncurses5-dev \
-      libselinux1 \
-      libssl-dev \
-      libtcl8.6 \
-      libtinfo5 \
-      python-dev \
-
  && git clone -b "v${version}" https://github.com/vim/vim.git /opt/vim \
  && cd /opt/vim \
  && ./configure --with-features=huge --with-compiledby='dockerdev' \
@@ -98,11 +155,6 @@ RUN set -x \
 # Install tmux
 RUN set -x \
  && version='2.2' \
- && apt-get update \
- && apt-get install -y \
-      automake \
-      libevent-dev \
-      pkg-config \
  && git clone -b "${version}" https://github.com/tmux/tmux.git /opt/tmux \
  && cd /opt/tmux \
  && ./autogen.sh \
@@ -111,22 +163,6 @@ RUN set -x \
  && make install \
  && curl -L -o /etc/bash_completion.d/tmux "https://raw.githubusercontent.com/przepompownia/tmux-bash-completion/master/completions/tmux"
 
-# Install docker-engine
-RUN set -x \
- && apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' --recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
- && echo 'deb https://apt.dockerproject.org/repo debian-jessie main' > /etc/apt/sources.list.d/docker.list \
- && apt-get update \
- && apt-cache policy docker-engine \
- && apt-get install -y docker-engine
-
-# Install docker-compose
-RUN set -x \
- && version='1.7.0' \
- && curl -L -o /tmp/docker-compose "https://github.com/docker/compose/releases/download/${version}/docker-compose-$(uname -s)-$(uname -m)" \
- && install -v /tmp/docker-compose "$PREFIX/bin/docker-compose-${version}" \
- && rm -vrf /tmp/* \
- && ln -s "$PREFIX/bin/docker-compose-${version}" "$PREFIX/bin/docker-compose"
-
 # Install direnv
 RUN set -x \
  && version='v2.7.0' \
@@ -134,20 +170,20 @@ RUN set -x \
  && cd "$GOPATH/src/github.com/direnv/direnv" \
  && make install
 
-# install jq
+# Install jq
 RUN set -x \
  && version='1.5' \
  && curl -m 10 -L -o /tmp/jq "https://github.com/stedolan/jq/releases/download/jq-${version}/jq-linux64" \
  && install -v /tmp/jq "$PREFIX/bin/jq" \
  && rm -vfv /tmp/*
 
-# install AWS CLI
+# Install AWS CLI
 RUN set -x \
- && apt-get install -y python-pip python-setuptools \
+ && apt-get install python-pip python-setuptools \
  && pip install awscli \
  && rm -vrf /tmp/*
 
-# install goodguide-git-hooks
+# Install goodguide-git-hooks
 RUN set -x \
  && version='0.0.8' \
  && cd /tmp \
@@ -156,10 +192,10 @@ RUN set -x \
  && install -v goodguide-git-hooks "$PREFIX/bin/" \
  && rm -vrf /tmp/*
 
-# install forego
+# Install forego
 RUN go get -u -v github.com/ddollar/forego
 
-# install hub
+# Install hub
 RUN set -x \
  && version='2.2.2' sha256='da2d780f6bca22d35fdf71c8ba1d11cfd61078d5802ceece8d1a2c590e21548d' \
  && cd /tmp \
@@ -173,16 +209,27 @@ RUN set -x \
 # install slackline to update Slack #status channel with /me messages
 RUN go get -v github.com/davidhampgonsalves/slackline
 
-# install rbenv and ruby-build
+# Install rbenv, ruby-build, rbenv-gem-rehash and finally Ruby
 RUN set -x \
-  && git clone https://github.com/sstephenson/rbenv.git ~/.rbenv \
-  && echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc \
-  && echo 'eval "$(rbenv init -)"' >> ~/.bashrc \
-  && git clone https://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
+ && git clone https://github.com/sstephenson/rbenv.git ~/.rbenv \
+ && echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc \
+ &&       export PATH="$HOME/.rbenv/bin:$PATH" \
+ && echo 'eval "$(rbenv init -)"' >> ~/.bashrc \
+ &&       eval "$(rbenv init -)" \
+ && git clone https://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build \
+ && echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> ~/.bashrc \
+ &&       export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH" \
+ && git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash \
+ && rbenv install 2.2.3 \
+ && rbenv global 2.2.3 \
+ && ruby -v
 
 # Set up some environment for SSH clients (ENV statements have no affect on ssh clients)
 RUN echo "export DOCKER_HOST='unix:///var/run/docker.sock'" >> /root/.profile
 RUN echo "export DEBIAN_FRONTEND=noninteractive" >> /root/.profile
+
+# A place for personal scripts
+RUN echo 'export PATH="/root/.bin:$PATH"' >> ~/.bashrc
 
 COPY etc/ssh/* /etc/ssh/
 COPY etc/pam.d/* /etc/pam.d/
