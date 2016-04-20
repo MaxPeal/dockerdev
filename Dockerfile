@@ -36,15 +36,6 @@ RUN set -x \
  && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
  && apt-cache policy docker-engine
 
-# Install docker-compose
-RUN set -x \
- && version='1.7.0' \
- && curl -L -o /tmp/docker-compose "https://github.com/docker/compose/releases/download/${version}/docker-compose-$(uname -s)-$(uname -m)" \
- && install -v /tmp/docker-compose "$PREFIX/bin/docker-compose-${version}" \
- && rm -vrf /tmp/* \
- && ln -s "$PREFIX/bin/docker-compose-${version}" "$PREFIX/bin/docker-compose"
-
-
 # Set up PPAs
 RUN apt-get update \
  && apt-get upgrade \
@@ -125,6 +116,14 @@ RUN apt-get install \
  && rm -f /etc/ssh/ssh_host_* \
  && mkdir -pv /var/run/sshd /root/.ssh \
  && chmod 0700 /root/.ssh
+
+# Install docker-compose
+RUN set -x \
+ && version='1.7.0' \
+ && curl -L -o /tmp/docker-compose "https://github.com/docker/compose/releases/download/${version}/docker-compose-$(uname -s)-$(uname -m)" \
+ && install -v /tmp/docker-compose "$PREFIX/bin/docker-compose-${version}" \
+ && rm -vrf /tmp/* \
+ && ln -s "$PREFIX/bin/docker-compose-${version}" "$PREFIX/bin/docker-compose"
 
 # Install Golang
 ENV GOROOT=$PREFIX/go GOPATH=/opt/gopath
