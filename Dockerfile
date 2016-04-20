@@ -38,21 +38,12 @@ RUN apt-get update \
 # Set up ssh server
 EXPOSE 22
 RUN apt-get install -y \
-      openssh-server \
+            openssh-server \
 
  # Delete the host keys it just generated. At runtime, we'll regenerate those
  && rm -f /etc/ssh/ssh_host_* \
-
  && mkdir -pv /var/run/sshd /root/.ssh \
  && chmod 0700 /root/.ssh
-
-# init gpg keychain
-# RUN gpg --refresh-keys
-
-# install newer version of GPG
-# COPY docker_runtime/gpg/install_gpg21.sh /tmp/install_gpg21.sh
-# RUN gnupg_version='2.1.10' libassuan_version='2.4.2' /tmp/install_gpg21.sh \
-#  && rm -rf /tmp/*
 
 # Install Golang
 ENV GOROOT=$PREFIX/go GOPATH=/opt/gopath
@@ -131,13 +122,9 @@ RUN set -x \
  && make install
 
 # install jq
-# COPY docker_runtime/gpg/jq_signing.key.pub.asc /tmp/
 RUN set -x \
  && version='1.5' \
  && curl -m 10 -L -o /tmp/jq "https://github.com/stedolan/jq/releases/download/jq-${version}/jq-linux64" \
- # && curl -L -o /tmp/jq.sig.asc "https://raw.githubusercontent.com/stedolan/jq/master/sig/v${version}/jq-linux64.asc" \
- # && gpg --import /tmp/jq_signing.key.pub.asc \
- # && gpg --verify /tmp/jq.sig.asc /tmp/jq \
  && install -v /tmp/jq "$PREFIX/bin/jq" \
  && rm -vfv /tmp/*
 
@@ -147,27 +134,11 @@ RUN set -x \
  && pip install awscli \
  && rm -vrf /tmp/*
 
-# install latest release of thoughtbot's `pick` tool
-# RUN set -x \
-#  && version='1.2.1' \
-#  # && curl -L -o /tmp/pick.tar.gz.sig.asc "https://github.com/thoughtbot/pick/releases/download/v${version}/pick-${version}.tar.gz.asc" \
-#  && curl -L -o /tmp/pick.tar.gz "https://github.com/thoughtbot/pick/releases/download/v${version}/pick-${version}.tar.gz" \
-#  # && gpg --recv-keys 35689C84 \
-#  # && gpg --verify /tmp/pick.tar.gz.sig.asc /tmp/pick.tar.gz \
-#  && tar -xvz -C /tmp -f /tmp/pick.tar.gz \
-#  && cd /tmp/pick-${version} \
-#  && ./configure \
-#  && make \
-#  && make install \
-#  && rm -vrf /tmp/*
-
 # install goodguide-git-hooks
 RUN set -x \
  && version='0.0.8' \
  && cd /tmp \
  && curl -L -o goodguide-git-hooks.tgz "https://github.com/GoodGuide/goodguide-git-hooks/releases/download/v${version}/goodguide-git-hooks_${version}_linux_amd64.tar.gz" \
- # && curl -L -o goodguide-git-hooks.tgz.asc "https://github.com/GoodGuide/goodguide-git-hooks/releases/download/v${version}/goodguide-git-hooks_${version}_linux_amd64.tar.gz.asc" \
- # && gpg --verify goodguide-git-hooks.tgz.asc goodguide-git-hooks.tgz \
  && tar -xvzf goodguide-git-hooks.tgz \
  && install -v goodguide-git-hooks "$PREFIX/bin/" \
  && rm -vrf /tmp/*
