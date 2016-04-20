@@ -28,23 +28,22 @@ RUN set -x \
  && echo 'Pin: release a=xenial-backports'   >> /etc/apt/preferences \
  && echo 'Pin-Priority: 500'                 >> /etc/apt/preferences \
 
-# Prepare for docker-engine
- && apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
-			--recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
- # This should be changed to ubuntu-xenial when it works
- # && echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list \
- && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
- && apt-cache policy docker-engine
-
 # Set up PPAs
 RUN apt-get update \
  && apt-get install \
 			python-software-properties \
       software-properties-common \
       apt-transport-https \
- && add-apt-repository ppa:git-core/ppa \
+ && add-apt-repository ppa:git-core/ppa
 
- && apt-get update \
+# Prepare for docker-engine
+RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
+			          --recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
+ # This should be changed to ubuntu-xenial when it works
+ # && echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list
+ && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list
+
+ RUN apt-get update \
  && apt-get upgrade \
  && apt-get install \
       aptitude \
