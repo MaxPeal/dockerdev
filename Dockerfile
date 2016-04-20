@@ -38,13 +38,14 @@ RUN set -x \
 
 # Set up PPAs
 RUN apt-get update \
- && apt-get upgrade \
  && apt-get install \
 			python-software-properties \
       software-properties-common \
+      apt-transport-https \
  && add-apt-repository ppa:git-core/ppa \
 
  && apt-get update \
+ && apt-get upgrade \
  && apt-get install \
       aptitude \
       bash \
@@ -54,7 +55,6 @@ RUN apt-get update \
       gzip \
       iputils-ping \
       ack-grep \
-      apt-transport-https \
       ca-certificates \
       build-essential \
       bzr \
