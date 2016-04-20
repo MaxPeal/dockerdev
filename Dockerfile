@@ -143,7 +143,7 @@ RUN set -x \
 
 # install AWS CLI
 RUN set -x \
- && apt-get install -y python-pip \
+ && apt-get install -y python-pip python-setuptools \
  && pip install awscli \
  && rm -vrf /tmp/*
 
@@ -200,14 +200,14 @@ RUN set -x \
 RUN echo "export DOCKER_HOST='unix:///var/run/docker.sock'" >> /root/.profile
 RUN echo "export DEBIAN_FRONTEND=noninteractive" >> /root/.profile
 
-COPY docker_runtime/entrypoint.sh /usr/local/bin/start_sshd
 COPY etc/ssh/* /etc/ssh/
 COPY etc/pam.d/* /etc/pam.d/
 
 # use a volume for the SSH host keys, to allow a persistent host ID across container restarts
 VOLUME ["/etc/ssh/ssh_host_keys"]
 
-ENTRYPOINT ["/usr/local/bin/start_sshd"]
+COPY docker/runtime/entrypoint /opt/docker/runtime/entrypoint
+ENTRYPOINT ["/opt/docker/runtime/entrypoint"]
 
 # these volumes allow creating a new container with these directories persisted, using --volumes-from
 VOLUME ["/code", "/root"]
