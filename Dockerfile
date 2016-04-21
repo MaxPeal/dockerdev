@@ -5,9 +5,11 @@ FROM ubuntu:xenial
 ENV DEBIAN_FRONTEND noninteractive
 
 # Use a volume for non package manager software to persist across container restarts
-RUN mv /usr/local /usr/local.original
-VOLUME ["/usr/local"]
 ENV PREFIX /usr/local
+RUN cp -a /usr/local /usr/local.original
+VOLUME ["/usr/local"]
+RUN ls -al /usr/local
+
 
 RUN set -x \
  # Set up UTF support
@@ -30,7 +32,7 @@ RUN set -x \
  && echo 'Package: *'                        >> /etc/apt/preferences \
  && echo 'Pin: release a=xenial-backports'   >> /etc/apt/preferences \
  && echo 'Pin-Priority: 500'                 >> /etc/apt/preferences \
- echo "DONE *****************************************************"
+ && echo "DONEecho "DONE echo "DONE *****************************************************"
 
 # Set up PPAs
 RUN apt-get update \
@@ -38,7 +40,7 @@ RUN apt-get update \
       software-properties-common \
       apt-transport-https \
  && add-apt-repository ppa:git-core/ppa \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Prepare for docker-engine
@@ -47,7 +49,7 @@ RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
  # This should be changed to ubuntu-xenial when it works
  # && echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list
  && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
  RUN apt-get update \
@@ -112,7 +114,7 @@ RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
       automake \
       libevent-dev \
       pkg-config \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Set up ssh server
@@ -124,7 +126,7 @@ RUN apt-get install \
  && rm -f /etc/ssh/ssh_host_* \
  && mkdir -pv /var/run/sshd /root/.ssh \
  && chmod 0700 /root/.ssh \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install docker-compose
@@ -134,7 +136,7 @@ RUN set -x \
  && install -v /tmp/docker-compose "$PREFIX/bin/docker-compose-${version}" \
  && rm -vrf /tmp/* \
  && ln -s "$PREFIX/bin/docker-compose-${version}" "$PREFIX/bin/docker-compose" \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install Golang
@@ -148,14 +150,14 @@ RUN set -x \
  && mkdir -vp "$GOROOT" \
  && tar -xz -C "$GOROOT" --strip-components=1 -f go.tgz \
  && rm /tmp/go.tgz \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 RUN echo "export GOROOT=$GOROOT" >> /root/.bashrc \
  && echo "export GOPATH=$GOPATH" >> /root/.bashrc \
  && echo "export PATH=$GOPATH/bin:$GOROOT/bin:\$PATH" >> /root/.bashrc \
  && mkdir -p $GOPATH \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install VIM
@@ -166,7 +168,7 @@ RUN set -x \
  && ./configure --with-features=huge --with-compiledby='dockerdev' \
  && make \
  && make install \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install tmux
@@ -179,7 +181,7 @@ RUN set -x \
  && make \
  && make install \
  && curl -L -o /etc/bash_completion.d/tmux "https://raw.githubusercontent.com/przepompownia/tmux-bash-completion/master/completions/tmux" \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install direnv
@@ -188,7 +190,7 @@ RUN set -x \
  && git clone -b "${version}" 'http://github.com/direnv/direnv' "$GOPATH/src/github.com/direnv/direnv" \
  && cd "$GOPATH/src/github.com/direnv/direnv" \
  && make install \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install jq
@@ -197,7 +199,7 @@ RUN set -x \
  && curl -m 10 -L -o /tmp/jq "https://github.com/stedolan/jq/releases/download/jq-${version}/jq-linux64" \
  && install -v /tmp/jq "$PREFIX/bin/jq" \
  && rm -vfv /tmp/* \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install AWS CLI
@@ -205,7 +207,7 @@ RUN set -x \
  && apt-get install python-pip python-setuptools \
  && pip install awscli \
  && rm -vrf /tmp/* \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install goodguide-git-hooks
@@ -216,12 +218,12 @@ RUN set -x \
  && tar -xvzf goodguide-git-hooks.tgz \
  && install -v goodguide-git-hooks "$PREFIX/bin/" \
  && rm -vrf /tmp/* \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install forego
 RUN go get -u -v github.com/ddollar/forego \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 
 # Install hub
@@ -234,7 +236,7 @@ RUN set -x \
  && cd hub-linux-amd64-${version}/ \
  && ./install \
  && rm -vrf /tmp/* \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 # Install rbenv, ruby-build, rbenv-gem-rehash and finally Ruby
 RUN set -x \
@@ -250,7 +252,7 @@ RUN set -x \
  && rbenv install 2.2.3 \
  && rbenv global 2.2.3 \
  && ruby -v \
- echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 # Set up some environment for SSH clients (ENV statements have no affect on ssh clients)
 RUN echo "export DOCKER_HOST='unix:///var/run/docker.sock'" >> /root/.bashrc \
