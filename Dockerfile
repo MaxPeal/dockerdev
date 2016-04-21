@@ -32,7 +32,7 @@ RUN set -x \
  && echo 'Package: *'                        >> /etc/apt/preferences \
  && echo 'Pin: release a=xenial-backports'   >> /etc/apt/preferences \
  && echo 'Pin-Priority: 500'                 >> /etc/apt/preferences \
- && echo "DONEecho "DONE echo "DONE *****************************************************"
+ && echo "DONE *****************************************************"
 
 # Set up PPAs
 RUN apt-get update \
@@ -41,16 +41,6 @@ RUN apt-get update \
       apt-transport-https \
  && add-apt-repository ppa:git-core/ppa \
  && echo "DONE *****************************************************"
-
-
-# Prepare for docker-engine
-RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
-			          --recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
- # This should be changed to ubuntu-xenial when it works
- # && echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list
- && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
- && echo "DONE *****************************************************"
-
 
  RUN apt-get update \
  && apt-get upgrade \
@@ -83,10 +73,6 @@ RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
       rsync \
       wget \
 
-			# Docker
-      linux-image-extra-virtual-lts-xenial \
-      docker-engine
-
       # Ruby dependencies
       zlib1g-dev \
       libssl-dev \
@@ -99,7 +85,7 @@ RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
       libcurl4-openssl-dev \
       libffi-dev \
 
-			# Vim dependencies
+      # Vim dependencies
       libacl1 \
       libc6 \
       libgpm2 \
@@ -110,17 +96,31 @@ RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
       libtinfo5 \
       python-dev \
 
-			# Tmux depndencies
+      # Tmux depndencies
       automake \
       libevent-dev \
       pkg-config \
  && echo "DONE *****************************************************"
 
 
+# Install docker-engine
+RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
+                --recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
+ # This should be changed to ubuntu-xenial when it is released
+ # && echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list
+ && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
+ && apt-get update \
+ && apt-get install \
+      openssh-server \
+      linux-image-extra-virtual-lts-xenial \
+      docker-engine \
+ && echo "DONE *****************************************************"
+
+
 # Set up ssh server
 EXPOSE 22
 RUN apt-get install \
-            openssh-server \
+      openssh-server \
 
  # Delete the host keys it just generated. At runtime, we'll regenerate those
  && rm -f /etc/ssh/ssh_host_* \
