@@ -13,14 +13,14 @@ RUN set -x \
  && update-locale LANG=en_US.UTF-8 \
 
  # Set apt mirror
- && sed 's:archive.ubuntu.com/ubuntu/:mirrors.rit.edu/ubuntu-archive/:' -i /etc/apt/sources.list \
+ # && sed 's:archive.ubuntu.com/ubuntu/:mirrors.rit.edu/ubuntu-archive/:' -i /etc/apt/sources.list \
 
  # never install recommends automatically
  && echo 'Apt::Install-Recommends "false";' > /etc/apt/apt.conf.d/docker-no-recommends \
  && echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/docker-assume-yes \
  && echo 'APT::Get::AutomaticRemove "true";' > /etc/apt/apt.conf.d/docker-auto-remove \
 
- # enable backports and others off by default
+ # Enable backports and others that are disabled by default
  && sed 's/^#\s*deb/deb/' -i /etc/apt/sources.list \
 
  # Enable automatic preference to use backport
