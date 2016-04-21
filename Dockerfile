@@ -4,6 +4,9 @@ FROM ubuntu:xenial
 # Tell Apt never to prompt
 ENV DEBIAN_FRONTEND noninteractive
 
+# Use a volume for non package manager software to persist across container restarts
+RUN mv /usr/local /usr/local.original
+VOLUME ["/usr/local"]
 ENV PREFIX /usr/local
 
 RUN set -x \
@@ -13,7 +16,7 @@ RUN set -x \
  && update-locale LANG=en_US.UTF-8 \
 
  # Set apt mirror
- # && sed 's:archive.ubuntu.com/ubuntu/:mirrors.rit.edu/ubuntu-archive/:' -i /etc/apt/sources.list \
+ && sed 's:archive.ubuntu.com/ubuntu/:mirrors.rit.edu/ubuntu-archive/:' -i /etc/apt/sources.list \
 
  # never install recommends automatically
  && echo 'Apt::Install-Recommends "false";' > /etc/apt/apt.conf.d/docker-no-recommends \
@@ -27,21 +30,25 @@ RUN set -x \
  && echo 'Package: *'                        >> /etc/apt/preferences \
  && echo 'Pin: release a=xenial-backports'   >> /etc/apt/preferences \
  && echo 'Pin-Priority: 500'                 >> /etc/apt/preferences \
+ echo "DONE *****************************************************"
 
 # Set up PPAs
 RUN apt-get update \
  && apt-get install \
-			python-software-properties \
       software-properties-common \
       apt-transport-https \
- && add-apt-repository ppa:git-core/ppa
+ && add-apt-repository ppa:git-core/ppa \
+ echo "DONE *****************************************************"
+
 
 # Prepare for docker-engine
 RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
 			          --recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
  # This should be changed to ubuntu-xenial when it works
  # && echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list
- && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list
+ && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
+ echo "DONE *****************************************************"
+
 
  RUN apt-get update \
  && apt-get upgrade \
@@ -104,7 +111,9 @@ RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
 			# Tmux depndencies
       automake \
       libevent-dev \
-      pkg-config
+      pkg-config \
+ echo "DONE *****************************************************"
+
 
 # Set up ssh server
 EXPOSE 22
@@ -114,7 +123,9 @@ RUN apt-get install \
  # Delete the host keys it just generated. At runtime, we'll regenerate those
  && rm -f /etc/ssh/ssh_host_* \
  && mkdir -pv /var/run/sshd /root/.ssh \
- && chmod 0700 /root/.ssh
+ && chmod 0700 /root/.ssh \
+ echo "DONE *****************************************************"
+
 
 # Install docker-compose
 RUN set -x \
@@ -122,7 +133,9 @@ RUN set -x \
  && curl -L -o /tmp/docker-compose "https://github.com/docker/compose/releases/download/${version}/docker-compose-$(uname -s)-$(uname -m)" \
  && install -v /tmp/docker-compose "$PREFIX/bin/docker-compose-${version}" \
  && rm -vrf /tmp/* \
- && ln -s "$PREFIX/bin/docker-compose-${version}" "$PREFIX/bin/docker-compose"
+ && ln -s "$PREFIX/bin/docker-compose-${version}" "$PREFIX/bin/docker-compose" \
+ echo "DONE *****************************************************"
+
 
 # Install Golang
 ENV GOROOT=$PREFIX/go GOPATH=/opt/gopath
@@ -134,12 +147,16 @@ RUN set -x \
  && shasum -a 1 go.tgz | grep -q "$sha1" \
  && mkdir -vp "$GOROOT" \
  && tar -xz -C "$GOROOT" --strip-components=1 -f go.tgz \
- && rm /tmp/go.tgz
+ && rm /tmp/go.tgz \
+ echo "DONE *****************************************************"
+
 
 RUN echo "export GOROOT=$GOROOT" >> /root/.bashrc \
  && echo "export GOPATH=$GOPATH" >> /root/.bashrc \
  && echo "export PATH=$GOPATH/bin:$GOROOT/bin:\$PATH" >> /root/.bashrc \
- && mkdir -p $GOPATH
+ && mkdir -p $GOPATH \
+ echo "DONE *****************************************************"
+
 
 # Install VIM
 RUN set -x \
@@ -148,7 +165,9 @@ RUN set -x \
  && cd /opt/vim \
  && ./configure --with-features=huge --with-compiledby='dockerdev' \
  && make \
- && make install
+ && make install \
+ echo "DONE *****************************************************"
+
 
 # Install tmux
 RUN set -x \
@@ -159,27 +178,35 @@ RUN set -x \
  && ./configure \
  && make \
  && make install \
- && curl -L -o /etc/bash_completion.d/tmux "https://raw.githubusercontent.com/przepompownia/tmux-bash-completion/master/completions/tmux"
+ && curl -L -o /etc/bash_completion.d/tmux "https://raw.githubusercontent.com/przepompownia/tmux-bash-completion/master/completions/tmux" \
+ echo "DONE *****************************************************"
+
 
 # Install direnv
 RUN set -x \
  && version='v2.7.0' \
  && git clone -b "${version}" 'http://github.com/direnv/direnv' "$GOPATH/src/github.com/direnv/direnv" \
  && cd "$GOPATH/src/github.com/direnv/direnv" \
- && make install
+ && make install \
+ echo "DONE *****************************************************"
+
 
 # Install jq
 RUN set -x \
  && version='1.5' \
  && curl -m 10 -L -o /tmp/jq "https://github.com/stedolan/jq/releases/download/jq-${version}/jq-linux64" \
  && install -v /tmp/jq "$PREFIX/bin/jq" \
- && rm -vfv /tmp/*
+ && rm -vfv /tmp/* \
+ echo "DONE *****************************************************"
+
 
 # Install AWS CLI
 RUN set -x \
  && apt-get install python-pip python-setuptools \
  && pip install awscli \
- && rm -vrf /tmp/*
+ && rm -vrf /tmp/* \
+ echo "DONE *****************************************************"
+
 
 # Install goodguide-git-hooks
 RUN set -x \
@@ -188,10 +215,14 @@ RUN set -x \
  && curl -L -o goodguide-git-hooks.tgz "https://github.com/GoodGuide/goodguide-git-hooks/releases/download/v${version}/goodguide-git-hooks_${version}_linux_amd64.tar.gz" \
  && tar -xvzf goodguide-git-hooks.tgz \
  && install -v goodguide-git-hooks "$PREFIX/bin/" \
- && rm -vrf /tmp/*
+ && rm -vrf /tmp/* \
+ echo "DONE *****************************************************"
+
 
 # Install forego
-RUN go get -u -v github.com/ddollar/forego
+RUN go get -u -v github.com/ddollar/forego \
+ echo "DONE *****************************************************"
+
 
 # Install hub
 RUN set -x \
@@ -202,10 +233,8 @@ RUN set -x \
  && tar -xvzf hub.tgz \
  && cd hub-linux-amd64-${version}/ \
  && ./install \
- && rm -vrf /tmp/*
-
-# install slackline to update Slack #status channel with /me messages
-RUN go get -v github.com/davidhampgonsalves/slackline
+ && rm -vrf /tmp/* \
+ echo "DONE *****************************************************"
 
 # Install rbenv, ruby-build, rbenv-gem-rehash and finally Ruby
 RUN set -x \
@@ -220,17 +249,20 @@ RUN set -x \
  && git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash \
  && rbenv install 2.2.3 \
  && rbenv global 2.2.3 \
- && ruby -v
+ && ruby -v \
+ echo "DONE *****************************************************"
 
 # Set up some environment for SSH clients (ENV statements have no affect on ssh clients)
-RUN echo "export DOCKER_HOST='unix:///var/run/docker.sock'" >> /root/.profile
-RUN echo "export DEBIAN_FRONTEND=noninteractive" >> /root/.profile
+RUN echo "export DOCKER_HOST='unix:///var/run/docker.sock'" >> /root/.bashrc \
+ && echo "export DEBIAN_FRONTEND=noninteractive" >> /root/.bashrc
 
 # A place for personal scripts
 RUN echo 'export PATH="/root/.bin:$PATH"' >> ~/.bashrc
 
-COPY etc/ssh/* /etc/ssh/
-COPY etc/pam.d/* /etc/pam.d/
+RUN cp -a /etc/ssh/ /etc/ssh.original/
+ && cp -a /etc/pam.d/ /etc/pam.d.original/
+COPY docker/etc/ssh/* /etc/ssh/
+COPY docker/etc/pam.d/* /etc/pam.d/
 
 # use a volume for the SSH host keys, to allow a persistent host ID across container restarts
 VOLUME ["/etc/ssh/ssh_host_keys"]
