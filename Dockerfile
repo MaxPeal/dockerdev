@@ -184,13 +184,13 @@ RUN set -x \
  && echo "DONE *****************************************************"
 
 
-# Install direnv
-RUN set -x \
- && version='v2.7.0' \
- && git clone -b "${version}" 'http://github.com/direnv/direnv' "$GOPATH/src/github.com/direnv/direnv" \
- && cd "$GOPATH/src/github.com/direnv/direnv" \
- && make install \
- && echo "DONE *****************************************************"
+# # Install direnv
+# RUN set -x \
+#  && version='v2.7.0' \
+#  && git clone -b "${version}" 'http://github.com/direnv/direnv' "$GOPATH/src/github.com/direnv/direnv" \
+#  && cd "$GOPATH/src/github.com/direnv/direnv" \
+#  && make install \
+#  && echo "DONE *****************************************************"
 
 
 # Install jq
@@ -252,6 +252,7 @@ RUN set -x \
  && rbenv install 2.2.3 \
  && rbenv global 2.2.3 \
  && ruby -v \
+ && gem install bundler
  && echo "DONE *****************************************************"
 
 # Set up some environment for SSH clients (ENV statements have no affect on ssh clients)
