@@ -6,9 +6,9 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # Use a volume for non package manager software to persist across container restarts
 ENV PREFIX /usr/local
-RUN cp -a /usr/local /usr/local.original
-VOLUME ["/usr/local"]
-RUN ls -al /usr/local
+# RUN cp -a /usr/local /usr/local.original
+# VOLUME ["/usr/local"]
+# RUN ls -al /usr/local
 
 
 RUN set -x \
@@ -141,12 +141,11 @@ RUN set -x \
 
 # Install Golang
 ENV GOROOT=$PREFIX/go GOPATH=/opt/gopath
-ENV PATH $GOROOT/bin:$PATH
+ENV PATH=$GOROOT/bin:$PATH
 RUN set -x \
- && version='1.5.2' sha1='cae87ed095e8d94a81871281d35da7829bd1234e' \
+ && version='1.6.2' \
  && cd /tmp \
  && curl -L -o go.tgz "https://storage.googleapis.com/golang/go${version}.linux-amd64.tar.gz" \
- && shasum -a 1 go.tgz | grep -q "$sha1" \
  && mkdir -vp "$GOROOT" \
  && tar -xz -C "$GOROOT" --strip-components=1 -f go.tgz \
  && rm /tmp/go.tgz \
@@ -183,15 +182,13 @@ RUN set -x \
  && curl -L -o /etc/bash_completion.d/tmux "https://raw.githubusercontent.com/przepompownia/tmux-bash-completion/master/completions/tmux" \
  && echo "DONE *****************************************************"
 
-
 # # Install direnv
-# RUN set -x \
-#  && version='v2.7.0' \
-#  && git clone -b "${version}" 'http://github.com/direnv/direnv' "$GOPATH/src/github.com/direnv/direnv" \
-#  && cd "$GOPATH/src/github.com/direnv/direnv" \
-#  && make install \
-#  && echo "DONE *****************************************************"
-
+RUN set -x \
+ && version='v2.7.0' \
+ && git clone -b "${version}" 'http://github.com/direnv/direnv' "$GOPATH/src/github.com/direnv/direnv" \
+ && cd "$GOPATH/src/github.com/direnv/direnv" \
+ && make install \
+ && echo "DONE *****************************************************"
 
 # Install jq
 RUN set -x \
