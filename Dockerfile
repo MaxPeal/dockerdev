@@ -209,29 +209,11 @@ RUN set -x \
  && rm -vrf /tmp/* \
  && echo "DONE *****************************************************"
 
-
-# Install goodguide-git-hooks
-RUN set -x \
- && version='0.0.8' \
- && cd /tmp \
- && curl -L -o goodguide-git-hooks.tgz "https://github.com/GoodGuide/goodguide-git-hooks/releases/download/v${version}/goodguide-git-hooks_${version}_linux_amd64.tar.gz" \
- && tar -xvzf goodguide-git-hooks.tgz \
- && install -v goodguide-git-hooks "$PREFIX/bin/" \
- && rm -vrf /tmp/* \
- && echo "DONE *****************************************************"
-
-
-# Install forego
-RUN go get -u -v github.com/ddollar/forego \
- && echo "DONE *****************************************************"
-
-
 # Install hub
 RUN set -x \
- && version='2.2.2' sha256='da2d780f6bca22d35fdf71c8ba1d11cfd61078d5802ceece8d1a2c590e21548d' \
+ && version='2.2.3' \
  && cd /tmp \
  && curl -L -o hub.tgz "https://github.com/github/hub/releases/download/v${version}/hub-linux-amd64-${version}.tgz" \
- && shasum -a 256 hub.tgz | grep -q "${sha256}" \
  && tar -xvzf hub.tgz \
  && cd hub-linux-amd64-${version}/ \
  && ./install \
@@ -252,7 +234,7 @@ RUN set -x \
  && rbenv install 2.2.3 \
  && rbenv global 2.2.3 \
  && ruby -v \
- && gem install bundler
+ && gem install bundler \
  && echo "DONE *****************************************************"
 
 # Set up some environment for SSH clients (ENV statements have no affect on ssh clients)
@@ -262,7 +244,7 @@ RUN echo "export DOCKER_HOST='unix:///var/run/docker.sock'" >> /root/.bashrc \
 # A place for personal scripts
 RUN echo 'export PATH="/root/.bin:$PATH"' >> ~/.bashrc
 
-RUN cp -a /etc/ssh/ /etc/ssh.original/
+RUN cp -a /etc/ssh/ /etc/ssh.original/ \
  && cp -a /etc/pam.d/ /etc/pam.d.original/
 COPY docker/etc/ssh/* /etc/ssh/
 COPY docker/etc/pam.d/* /etc/pam.d/
