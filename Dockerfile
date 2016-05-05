@@ -72,6 +72,8 @@ RUN apt-get update \
       subversion \
       rsync \
       wget \
+      locate \
+      direnv \
 
       # Ruby dependencies
       zlib1g-dev \
@@ -138,27 +140,6 @@ RUN set -x \
  && ln -s "$PREFIX/bin/docker-compose-${version}" "$PREFIX/bin/docker-compose" \
  && echo "DONE *****************************************************"
 
-
-# Install Golang
-ENV GOROOT=$PREFIX/go GOPATH=/opt/gopath
-ENV PATH=$GOROOT/bin:$PATH
-RUN set -x \
- && version='1.6.2' \
- && cd /tmp \
- && curl -L -o go.tgz "https://storage.googleapis.com/golang/go${version}.linux-amd64.tar.gz" \
- && mkdir -vp "$GOROOT" \
- && tar -xz -C "$GOROOT" --strip-components=1 -f go.tgz \
- && rm /tmp/go.tgz \
- && echo "DONE *****************************************************"
-
-
-RUN echo "export GOROOT=$GOROOT" >> /root/.bashrc \
- && echo "export GOPATH=$GOPATH" >> /root/.bashrc \
- && echo "export PATH=$GOPATH/bin:$GOROOT/bin:\$PATH" >> /root/.bashrc \
- && mkdir -p $GOPATH \
- && echo "DONE *****************************************************"
-
-
 # Install VIM
 RUN set -x \
  && version='7.4.1752' \
@@ -180,14 +161,6 @@ RUN set -x \
  && make \
  && make install \
  && curl -L -o /etc/bash_completion.d/tmux "https://raw.githubusercontent.com/przepompownia/tmux-bash-completion/master/completions/tmux" \
- && echo "DONE *****************************************************"
-
-# # Install direnv
-RUN set -x \
- && version='v2.7.0' \
- && git clone -b "${version}" 'http://github.com/direnv/direnv' "$GOPATH/src/github.com/direnv/direnv" \
- && cd "$GOPATH/src/github.com/direnv/direnv" \
- && make install \
  && echo "DONE *****************************************************"
 
 # Install jq
