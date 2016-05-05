@@ -34,12 +34,13 @@ RUN set -x \
  && echo 'Pin-Priority: 500'                 >> /etc/apt/preferences \
  && echo "DONE *****************************************************"
 
-# Set up PPAs
+# Set up PPAs for git and tmate
 RUN apt-get update \
  && apt-get install \
       software-properties-common \
       apt-transport-https \
  && add-apt-repository ppa:git-core/ppa \
+ && add-apt-repository ppa:tmate.io/archive \
  && echo "DONE *****************************************************"
 
  RUN apt-get update \
@@ -74,6 +75,7 @@ RUN apt-get update \
       wget \
       locate \
       direnv \
+      tmate \
 
       # Ruby dependencies
       zlib1g-dev \
