@@ -2,7 +2,7 @@ version: '2'
 
 services:
   dev:
-    image: namick/dockerdev
+    image: quay.io/namick/dockerdev
     extra_hosts:
       - 'docker.dev:172.17.0.1'
 

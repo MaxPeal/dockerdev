@@ -76,6 +76,8 @@ RUN apt-get update \
       locate \
       direnv \
       tmate \
+      python-pygments \
+      dnsutils \
 
       # Ruby dependencies
       zlib1g-dev \
