@@ -18,7 +18,7 @@ RUN set -x \
  && update-locale LANG=en_US.UTF-8 \
 
  # Set apt mirror
- && sed 's:archive.ubuntu.com/ubuntu/:mirrors.rit.edu/ubuntu-archive/:' -i /etc/apt/sources.list \
+ # && sed 's:archive.ubuntu.com/ubuntu/:mirrors.rit.edu/ubuntu-archive/:' -i /etc/apt/sources.list \
 
  # never install recommends automatically
  && echo 'Apt::Install-Recommends "false";' > /etc/apt/apt.conf.d/docker-no-recommends \
@@ -43,6 +43,12 @@ RUN apt-get update \
  && add-apt-repository ppa:tmate.io/archive \
  && echo "DONE *****************************************************"
 
+# Set up PPAs for git and tmate
+RUN apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
  RUN apt-get update \
  && apt-get upgrade \
  && apt-get install \
@@ -109,17 +115,29 @@ RUN apt-get update \
  && echo "DONE *****************************************************"
 
 
+# sudo apt-get remove docker docker-engine docker.io containerd runc
+
+### RUN sudo apt-get install docker-ce docker-ce-cli containerd.io
+
 # Install docker-engine
-RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
-                --recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
+&& sudo add-apt-repository "deb [arch=amd64,armhf,arm64,ppc64el,s390x] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+###RUN apt-key adv --keyserver 'hkp://p80.pool.sks-keyservers.net:80' \
+###                --recv-keys '58118E89F3A912897C070ADBF76221572C52609D' \
  # This should be changed to ubuntu-xenial when it is released
+ # https://www.docker.com/blog/changes-dockerproject-org-apt-yum-repositories/
  # && echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list
- && echo 'deb https://apt.dockerproject.org/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
- && apt-get update \
+ #&& echo 'deb https://download.docker.com/repo ubuntu-wily main' > /etc/apt/sources.list.d/docker.list \
+ #&& echo 'deb https://download.docker.com/repo ubuntu-xenial main' > /etc/apt/sources.list.d/docker.list \
+ # && apt-get install docker-engine \
+ # apt-get install docker-ce docker-ce-cli containerd.io
+ 
+ RUN apt-get update \
  && apt-get install \
+      docker-ce-cli \
       openssh-server \
       linux-image-extra-virtual-lts-xenial \
-      docker-engine \
  && echo "DONE *****************************************************"
 
 
@@ -137,7 +155,8 @@ RUN apt-get install \
 
 # Install docker-compose
 RUN set -x \
- && version='1.7.0' \
+ #&& version='1.7.0' \
+ version='1.27.4' \
  && curl -L -o /tmp/docker-compose "https://github.com/docker/compose/releases/download/${version}/docker-compose-$(uname -s)-$(uname -m)" \
  && install -v /tmp/docker-compose "$PREFIX/bin/docker-compose-${version}" \
  && rm -vrf /tmp/* \
@@ -157,7 +176,8 @@ RUN set -x \
 
 # Install tmux
 RUN set -x \
- && version='2.2' \
+ #&& version='2.2' \
+ && version='3.1b' \
  && git clone -b "${version}" https://github.com/tmux/tmux.git /opt/tmux \
  && cd /opt/tmux \
  && ./autogen.sh \
@@ -169,7 +189,8 @@ RUN set -x \
 
 # Install jq
 RUN set -x \
- && version='1.5' \
+ #&& version='1.5' \
+ && version='1.6' \
  && curl -m 10 -L -o /tmp/jq "https://github.com/stedolan/jq/releases/download/jq-${version}/jq-linux64" \
  && install -v /tmp/jq "$PREFIX/bin/jq" \
  && rm -vfv /tmp/* \
@@ -185,7 +206,8 @@ RUN set -x \
 
 # Install hub
 RUN set -x \
- && version='2.2.3' \
+ #&& version='2.2.3' \
+ && version='2.14.2' \
  && cd /tmp \
  && curl -L -o hub.tgz "https://github.com/github/hub/releases/download/v${version}/hub-linux-amd64-${version}.tgz" \
  && tar -xvzf hub.tgz \
