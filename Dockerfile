@@ -231,8 +231,11 @@ RUN set -x \
  && echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> ~/.bashrc \
  &&       export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH" \
  && git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash \
- && rbenv install 2.3.1 \
- && rbenv global 2.3.1 \
+ && rbenv install -l \ # List all available versions
+ #&& rbenv install 2.3.1 \
+ #&& rbenv global 2.3.1 \
+ && rbenv install 2.7.2 \
+ && rbenv global 2.7.2 \
  && ruby -v \
  && gem install bundler \
  && echo "DONE *****************************************************"
