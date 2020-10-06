@@ -44,7 +44,8 @@ RUN apt-get update \
  && echo "DONE *****************************************************"
 
 # Set up PPAs for git and tmate
-RUN apt-transport-https \
+RUN apt-get install \
+    apt-transport-https \
     ca-certificates \
     curl \
     gnupg-agent \
