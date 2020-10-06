@@ -46,6 +46,7 @@ RUN apt-get update \
 
 # Set up PPAs for git and tmate
 RUN apt-get install \
+    sudo \
     apt-transport-https \
     ca-certificates \
     curl \
