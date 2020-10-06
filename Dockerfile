@@ -13,6 +13,7 @@ ENV PREFIX /usr/local
 
 RUN set -x \
  # Set up UTF support
+ && apt update && apt --reinstall install locales \
  && locale-gen en_US en_US.UTF-8 \
  && dpkg-reconfigure locales \
  && update-locale LANG=en_US.UTF-8 \
