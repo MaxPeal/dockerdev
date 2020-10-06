@@ -115,6 +115,7 @@ RUN apt-get install \
       automake \
       libevent-dev \
       pkg-config \
+      bison \
  && echo "DONE *****************************************************"
 
 
